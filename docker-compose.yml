@@ -1,0 +1,66 @@
+services:
+  web:
+    build: ./  # Ensure there's a Dockerfile in this path
+    container_name: flask_app
+    command: flask run --host=0.0.0.0
+    volumes:
+      - .:/flask
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: development
+    depends_on:
+      - db
+    networks:
+      - mqtt5-network
+
+  db:
+    image: mysql
+    container_name: db_flask
+    environment:
+      - MYSQL_DATABASE=data_dt
+      - MYSQL_USER=web
+      - MYSQL_PASSWORD=web
+      - MYSQL_ROOT_PASSWORD=root_password  # Set a root password
+    volumes:
+      -  "./db:/docker-entrypoint-initdb.d"
+    ports:
+      - "3307:3306"
+    networks:
+      - mqtt5-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8001:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+    depends_on:
+      - db
+    networks:
+      - mqtt5-network
+
+  mqtt5:
+    image: eclipse-mosquitto
+    container_name: mqtt5_flask
+    ports:
+      - "1883:1883" # Default MQTT port
+      - "9001:9001" # WebSocket port
+    volumes:
+      - ./config:/mosquitto/config:rw
+      - ./data:/mosquitto/data:rw
+      - ./log:/mosquitto/log:rw
+    restart: unless-stopped
+    networks:
+      - mqtt5-network
+
+volumes:
+  db_data:  # Persistent data for MySQL
+  config:
+  data:
+  log:
+
+networks:
+  mqtt5-network:
+    external: true

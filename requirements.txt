@@ -1,0 +1,11 @@
+Flask
+flask_sqlalchemy
+pymysql
+flask_migrate
+flask_bcrypt
+flask_login
+flask_mail
+flask_mqtt
+requests
+flask_wtf
+cryptography
